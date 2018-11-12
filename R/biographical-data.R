@@ -327,7 +327,7 @@ subset_interactions <- function(babase, members_l, .adults_only, my_acts = NULL)
 
   inter <- inter %>%
     dplyr::select(iid, sid, act, actor, actee, actor_sex, actee_sex, date,
-                  yearmon, actor_grp, actee_grp)
+                  yearmon, actor_grp, actee_grp, actor_matured, actee_matured, actor_ranked, actee_ranked)
 
   # If user requested grooming data, deal with first-of-month issue
 
