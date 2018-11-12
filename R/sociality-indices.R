@@ -300,6 +300,7 @@ sci <- function(my_iyol, members_l, focals_l, females_l, interactions_l,
     pb <- txtProgressBar(min = 0, max = nrow(my_iyol), style = 3)
     progress <- function(n) setTxtProgressBar(pb, n)
     opts <- list(progress = progress)
+    message("running the get_sci_subset")
     subset <- foreach(i = 1:nrow(my_iyol), .options.snow = opts,
                       .packages = c('tidyverse')) %dopar% {
                         get_sci_subset(my_iyol[i, ], members_l, focals_l,
@@ -308,6 +309,7 @@ sci <- function(my_iyol, members_l, focals_l, females_l, interactions_l,
                       }
     close(pb)
     stopCluster(cl)
+    message("running the get_sci_subset DONE")
     my_iyol <- add_column(my_iyol, subset)
   }
   else {
@@ -331,6 +333,8 @@ sci <- function(my_iyol, members_l, focals_l, females_l, interactions_l,
     mutate(focal = (sname == sname1 & grp == grp1)) %>%
     filter(focal) %>%
     select(sname, grp, start, end, contains("SCI_"))
+  
+  message("sci_focal DONE")
 
   res <- left_join(my_iyol, sci_focal, by = c("sname", "grp", "start", "end"))
 
