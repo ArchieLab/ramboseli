@@ -2,6 +2,7 @@
 #' Obtain a subset of members table that excludes behavioral observation gaps.
 #'
 #' @param babase A DBI connection to the babase database
+#' @param .adults_only Logical indicating whether to include adults only. Default is TRUE
 #'
 #' @return A subset of the members table that excludes behavioral observation gaps.
 #' @export
@@ -45,8 +46,12 @@ subset_members <- function(babase) {
                       by = c("grp" = "gid")) %>%
     dplyr::filter(grp < 3 & grp != 1.3 & grp != 1.4 & date >= permanent &
                     (is.na(impermanent) | date <= impermanent) &
-                    (is.na(last_reg_census) | date <= last_reg_census) &
-                    ((sex == "F" & date >= matured) | (sex == "M" & date >= ranked)))
+                    (is.na(last_reg_census) | date <= last_reg_census))
+                  
+  if(.adults_only) {
+  members_keep <- members_keep %>% filter(((sex == "F" & date >= matured) | 
+                                             (sex == "M" & date >= ranked)))
+  }
 
   # Find behavior gaps that overlap records in members_keep
   bg <- members_keep %>%
@@ -209,7 +214,7 @@ subset_females <- function(members_l) {
 
   ## Get a count of number of adult females per day in a grp
   females_l <- members_l %>%
-    dplyr::filter(sex == "F") %>%
+    dplyr::filter(sex == "F" & date >= matured) %>%
     dplyr::group_by(grp, date) %>%
     dplyr::summarise(nr_females = n()) %>%
     dplyr::ungroup()
@@ -223,12 +228,12 @@ subset_females <- function(members_l) {
 #'
 #' @param babase A DBI connection to the babase database
 #' @param members_l A subset of members table produced by the function 'subset_members'
-#'
+#' @param .adults_only Logical indicating whether to include adults only. Default is TRUE
 #' @return A subset of grooming data that excludes behavioral observation gaps.
 #' @export
 #'
 #' @examples
-subset_interactions <- function(babase, members_l, my_acts = NULL) {
+subset_interactions <- function(babase, members_l, .adults_only, my_acts = NULL) {
 
   if (class(babase) != "PostgreSQLConnection") {
     stop("Invalid connection to babase.")
@@ -307,12 +312,15 @@ subset_interactions <- function(babase, members_l, my_acts = NULL) {
                      by = c("actor" = "sname")) %>%
     dplyr::left_join(dplyr::select(rankdates_l, sname, actee_ranked = ranked),
                      by = c("actee" = "sname"))
-
+  
+  
+  if(.adults_only) {
   inter <- inter %>%
     dplyr::filter(((actor_sex == "F" & date >= actor_matured) |
                      (actor_sex == "M" & date >= actor_ranked)) &
                     ((actee_sex == "F" & date >= actee_matured) |
                        (actee_sex == "M" & date >= actee_ranked)))
+  }
 
 
   inter$yearmon <- as.character(zoo::as.yearmon(inter$date))
