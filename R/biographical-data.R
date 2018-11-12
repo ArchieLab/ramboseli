@@ -8,7 +8,7 @@
 #' @export
 #'
 #' @examples
-subset_members <- function(babase) {
+subset_members <- function(babase, .adults_only = FALSE) {
 
   if (class(babase) != "PostgreSQLConnection") {
     stop("Invalid connection to babase.")
