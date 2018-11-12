@@ -216,21 +216,22 @@ get_sci_subset <- function(df, members_l, focals_l, females_l, interactions_l,
                     TRUE ~ log2(IfromA_daily)))
   
   my_subset_SCI_F <- my_subset %>% 
-    filter(sex == df$sex) %>% 
-    mutate(SCI_F_Dir = as.numeric(residuals(lm(log2ItoF_daily ~ log2OE))),
-           SCI_F_Rec = as.numeric(residuals(lm(log2IfromF_daily ~ log2OE))))
+    filter(sex == df$sex) 
+    my_subset_SCI_F$SCI_F_Dir <- as.numeric(residuals(lm(data=my_subset_SCI_F, log2ItoF_daily ~ log2OE)))
+    my_subset_SCI_F$SCI_F_Rec <- as.numeric(residuals(lm(data=my_subset_SCI_F, log2IfromF_daily ~ log2OE)))
   
   my_subset <- my_subset %>%
-    dplyr::left_join(select(my_subset_SCI_F, sname, grp, SCI_F_Dir, SCI_F_Rec), by = c("sex", "sname", "grp"))
+    dplyr::left_join(select(my_subset_SCI_F, sname, sex, grp, SCI_F_Dir, SCI_F_Rec), by = c("sex", "sname", "grp"))
 
   if (include_males) {
     my_subset_SCI_M <- my_subset %>% 
-      filter(sex == df$sex) %>% 
-      mutate(SCI_M_Dir = as.numeric(residuals(lm(log2ItoM_daily ~ log2OE))),
-             SCI_M_Rec = as.numeric(residuals(lm(log2IfromM_daily ~ log2OE))))
+      filter(sex == df$sex) 
+    my_subset_SCI_M$SCI_M_Dir <- as.numeric(residuals(lm(data=my_subset_SCI_M, log2ItoM_daily ~ log2OE)))
+    my_subset_SCI_M$SCI_M_Rec <- as.numeric(residuals(lm(data=my_subset_SCI_M, log2IfromM_daily ~ log2OE)))
     
     my_subset <- my_subset %>%
-      dplyr::left_join(select(my_subset_SCI_M, sname, grp, SCI_M_Dir, SCI_M_Rec), by = c("sex", "sname", "grp"))
+      dplyr::left_join(select(my_subset_SCI_F, sname, sex, grp, SCI_F_Dir, SCI_F_Rec), by = c("sex", "sname", "grp"))
+    
   }
   
   my_subset$SCI_A_Dir <- as.numeric(residuals(lm(data = my_subset, log2ItoA_daily ~ log2OE)))
