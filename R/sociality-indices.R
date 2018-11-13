@@ -230,7 +230,7 @@ get_sci_subset <- function(df, members_l, focals_l, females_l, interactions_l,
     my_subset_SCI_M$SCI_M_Rec <- as.numeric(residuals(lm(data=my_subset_SCI_M, log2IfromM_daily ~ log2OE)))
     
     my_subset <- my_subset %>%
-      dplyr::left_join(select(my_subset_SCI_F, sname, sex, grp, SCI_F_Dir, SCI_F_Rec), by = c("sex", "sname", "grp"))
+      dplyr::left_join(select(my_subset_SCI_M, sname, sex, grp, SCI_M_Dir, SCI_M_Rec), by = c("sex", "sname", "grp"))
     
   }
   
