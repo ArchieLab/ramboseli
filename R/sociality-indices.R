@@ -17,7 +17,6 @@ get_mem_dates <- function(my_sub, members_l, df, sel = NULL) {
   return(mem_dates)
 }
 
-
 get_interaction_dates <- function(my_sub, members_l, df, my_sex_var, my_role, my_sex, .adults_only) {
   
   if(.adults_only == TRUE) {
@@ -119,7 +118,7 @@ get_sci_subset <- function(df, members_l, focals_l, females_l, interactions_l,
   ## Interactions given to females by each actor of focal's sex
   gg_f <- get_interaction_dates(my_subset, members_l, interactions_l,
                                 quo(actee_sex), "actor", "F", .adults_only = TRUE) %>%
-    dplyr::group_by(grp, sname, is_adult) %>%
+    dplyr::group_by(grp, sname) %>%
     dplyr::summarise(ItoF = n())
 
   ## Interactions received from females by each actee of focal's sex
