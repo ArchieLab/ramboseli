@@ -7,12 +7,12 @@ get_mem_dates <- function(my_sub, members_l, df, sel = NULL) {
 
   # Remove all rows for dates when the particular animal wasn't present in grp
   remove_rows <- mem_dates %>%
-    dplyr::anti_join(members_l, by = c("sname", "grp", "date"))
+    dplyr::anti_join(members_l, by = c("is_adult", "sname", "grp", "date"))
 
   # Take set difference and calculate summary
   mem_dates <- mem_dates %>%
     dplyr::setdiff(remove_rows) %>%
-    dplyr::select(sname, grp, date, !!sel)
+    dplyr::select(is_adult, sname, grp, date, !!sel)
 
   return(mem_dates)
 }
@@ -69,7 +69,7 @@ get_sci_subset <- function(df, members_l, focals_l, females_l, interactions_l,
   my_subset <- members_l %>%
     #dplyr::inner_join(select(df, -sname, -grp), by = c("sex")) %>%
     dplyr::filter(date >= df$start & date <= df$end) %>%
-    dplyr::group_by(sex, sname, grp) %>%
+    dplyr::group_by(sex, sname, grp, is_adult) %>%
     dplyr::summarise(days_present = n(),
                      start = min(date),
                      end = max(date))
@@ -85,25 +85,25 @@ get_sci_subset <- function(df, members_l, focals_l, females_l, interactions_l,
   ## Observation days
   # Focal animal was present and at least one focal sample was collected
   obs_days <- my_focals %>%
-    group_by(grp, sname) %>%
+    group_by(grp, sname, is_adult) %>%
     summarise(days_observed = n())
 
   my_subset <- my_subset %>%
-    left_join(obs_days, by = c("sname", "grp"))
+    left_join(obs_days, by = c("grp", "sname", "is_adult"))
 
   my_focals <- my_focals %>%
-    dplyr::group_by(grp, sname) %>%
+    dplyr::group_by(grp, sname, is_adult) %>%
     dplyr::summarise(n_focals = sum(sum))
 
   ## Female counts
   my_females <- get_mem_dates(my_subset, members_l, females_l, sel = quo(nr_females)) %>%
-    dplyr::group_by(grp, sname) %>%
+    dplyr::group_by(grp, sname, is_adult) %>%
     dplyr::summarise(mean_f_count = mean(nr_females))
 
   # Join back to my_subset to add n_focals column
   my_subset <- my_subset %>%
-    dplyr::left_join(my_focals, by = c("grp", "sname")) %>%
-    dplyr::left_join(my_females, by = c("grp", "sname"))
+    dplyr::left_join(my_focals, by = c("grp", "sname", "is_adult")) %>%
+    dplyr::left_join(my_females, by = c("grp", "sname", "is_adult"))
 
   if (nrow(my_subset) == 0 | nrow(my_focals) == 0 | nrow(my_females) == 0) {
     return(dplyr::tbl_df(NULL))
@@ -119,7 +119,7 @@ get_sci_subset <- function(df, members_l, focals_l, females_l, interactions_l,
   ## Interactions given to females by each actor of focal's sex
   gg_f <- get_interaction_dates(my_subset, members_l, interactions_l,
                                 quo(actee_sex), "actor", "F", .adults_only = TRUE) %>%
-    dplyr::group_by(grp, sname) %>%
+    dplyr::group_by(grp, sname, is_adult) %>%
     dplyr::summarise(ItoF = n())
 
   ## Interactions received from females by each actee of focal's sex
@@ -216,21 +216,21 @@ get_sci_subset <- function(df, members_l, focals_l, females_l, interactions_l,
                     TRUE ~ log2(IfromA_daily)))
   
   my_subset_SCI_F <- my_subset %>% 
-    filter(sex == df$sex) 
+    filter(sex == df$sex & is_adult == TRUE) 
     my_subset_SCI_F$SCI_F_Dir <- as.numeric(residuals(lm(data=my_subset_SCI_F, log2ItoF_daily ~ log2OE)))
     my_subset_SCI_F$SCI_F_Rec <- as.numeric(residuals(lm(data=my_subset_SCI_F, log2IfromF_daily ~ log2OE)))
   
   my_subset <- my_subset %>%
-    dplyr::left_join(select(my_subset_SCI_F, sname, sex, grp, SCI_F_Dir, SCI_F_Rec), by = c("sex", "sname", "grp"))
+    dplyr::left_join(select(my_subset_SCI_F, is_adult, sname, sex, grp, SCI_F_Dir, SCI_F_Rec), by = c("is_adult", "sex", "sname", "grp"))
 
   if (include_males) {
     my_subset_SCI_M <- my_subset %>% 
-      filter(sex == df$sex) 
+      filter(sex == df$sex  & is_adult == TRUE) 
     my_subset_SCI_M$SCI_M_Dir <- as.numeric(residuals(lm(data=my_subset_SCI_M, log2ItoM_daily ~ log2OE)))
     my_subset_SCI_M$SCI_M_Rec <- as.numeric(residuals(lm(data=my_subset_SCI_M, log2IfromM_daily ~ log2OE)))
     
     my_subset <- my_subset %>%
-      dplyr::left_join(select(my_subset_SCI_M, sname, sex, grp, SCI_M_Dir, SCI_M_Rec), by = c("sex", "sname", "grp"))
+      dplyr::left_join(select(my_subset_SCI_M, is_adult, sname, sex, grp, SCI_M_Dir, SCI_M_Rec), by = c("is_adult", "sex", "sname", "grp"))
     
   }
   

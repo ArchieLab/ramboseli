@@ -108,7 +108,8 @@ subset_members <- function(babase, .adults_only = FALSE) {
   members_l <- members_l %>%
     dplyr::group_by(sname, yearmon) %>%
     dplyr::mutate(grps = paste(sort(unique(grp)), collapse = " ")) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>% 
+    mutate(is_adult := ifelse((sex == "F" & date >= matured)|(sex == "M" & date >= ranked),TRUE, FALSE)) 
 
   return(members_l)
 }
