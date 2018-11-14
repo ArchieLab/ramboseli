@@ -280,7 +280,7 @@ sci <- function(my_iyol, members_l, focals_l, females_l, interactions_l,
   }
 
   if (parallel) {
-    avail_cores <- detectCores()
+    avail_cores <- detectCores() -1
     if (!is.null(ncores)) {
       if (ncores > avail_cores) {
         message(paste0("Ignoring 'ncores' argument because only ", avail_cores,
@@ -340,7 +340,8 @@ sci <- function(my_iyol, members_l, focals_l, females_l, interactions_l,
                  round(tdiff / 60, 3), ") hours."))
 
   return(res)
-}
+}## If you want to use the packages on the cluster, "RPostgreSQL" causes a problem.
+## You can run the sci function on the cluster but not get data from the database
 
 
 #' Calculate dyadic index variables from individual-year-of-life data
@@ -377,7 +378,7 @@ dyadic_index <- function(my_iyol, biograph_l, members_l, focals_l, females_l, in
   }
 
   if (parallel) {
-    avail_cores <- detectCores()
+    avail_cores <- detectCores() -1
     if (!is.null(ncores)) {
       if (ncores > avail_cores) {
         message(paste0("Ignoring 'ncores' argument because only ", avail_cores,
